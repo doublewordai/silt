@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0](https://github.com/doublewordai/silt/releases/tag/v0.1.0) - 2025-12-12
+
+### Other
+
+- Add required package metadata and MIT license
+- Add initial CHANGELOG.md
+- Merge pull request #2 from doublewordai/renovate/configure
+- Add CARGO_REGISTRY_TOKEN to release-plz workflow
+- Initial commit: Silt - transparent batching proxy for OpenAI API
+
 ### Added
 - Initial release of Silt
 - Transparent batching proxy for OpenAI API
