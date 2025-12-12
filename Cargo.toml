@@ -1,6 +1,6 @@
 [package]
 name = "silt"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A transparent batching proxy for the OpenAI API that accumulates real-time requests and dispatches at intervals using the OpenAI Batch API to achieve ~50% cost savings"
 license = "MIT"
