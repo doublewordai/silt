@@ -12,8 +12,7 @@ to avoid connection drops.
 
 - **Transparent Batching**: Standard OpenAI API interface - no custom client
 code needed
-- **Automatic Retry**: Idempotent requests with client-generated IDs enable
-safe retries
+- **Automatic Retry**: Idempotent requests with client-provided IDs enable safe retries
 - **Long-Lived Connections**: TCP keepalives and connection resumption for
 multi-hour waits
 - **Cost Optimization**: Leverages OpenAI's Batch API for 50% cost reduction
@@ -60,7 +59,6 @@ cp .env.example .env
 
 Required configuration:
 
-- `OPENAI_API_KEY`: Your OpenAI API key
 - `REDIS_URL`: Redis connection URL (default: `redis://127.0.0.1:6379`)
 
 Optional configuration:
@@ -162,8 +160,7 @@ curl -X POST http://localhost:8080/v1/chat/completions \
   }'
 ```
 
-**Important**: The `Idempotency-Key` header is **required**. Requests without
-it will receive a 400 error.
+**Note**: The `Idempotency-Key` header is optional. If not provided, the server will automatically generate a unique UUID for the request. However, **you must provide your own key if you want to support connection resumption and retries** - server-generated keys cannot be used for reconnection since the client doesn't know what was generated.
 
 ## How It Works
 

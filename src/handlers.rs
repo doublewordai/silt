@@ -10,6 +10,7 @@ use futures_util::stream::StreamExt;
 use std::sync::Arc;
 use tokio::time::{timeout, Duration};
 use tracing::{error, info, warn};
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -25,11 +26,16 @@ pub async fn create_chat_completion(
     headers: HeaderMap,
     Json(request): Json<CompletionRequest>,
 ) -> Result<Response, ApiError> {
-    // Extract idempotency key (required)
+    // Extract or generate idempotency key
     let idempotency_key = headers
         .get("idempotency-key")
         .and_then(|h| h.to_str().ok())
-        .ok_or_else(|| ApiError::MissingIdempotencyKey)?;
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| {
+            let generated_key = Uuid::new_v4().to_string();
+            info!("No idempotency key provided, generated: {}", generated_key);
+            generated_key
+        });
 
     // Extract API key from Authorization header (required)
     let api_key = headers
@@ -42,7 +48,7 @@ pub async fn create_chat_completion(
     info!("Received request with idempotency key: {}", idempotency_key);
 
     // Check if request already exists
-    let existing_state = app_state.state_manager.get_request(idempotency_key).await
+    let existing_state = app_state.state_manager.get_request(&idempotency_key).await
         .map_err(|e| ApiError::InternalError(e.to_string()))?;
 
     match existing_state {
@@ -69,14 +75,14 @@ pub async fn create_chat_completion(
             // New request - create it
             info!("Creating new request: {}", idempotency_key);
             app_state.state_manager
-                .create_request(idempotency_key, request, api_key)
+                .create_request(&idempotency_key, request, api_key)
                 .await
                 .map_err(|e| ApiError::InternalError(e.to_string()))?;
         }
     }
 
     // Wait for completion
-    wait_for_completion(&app_state.state_manager, idempotency_key).await
+    wait_for_completion(&app_state.state_manager, &idempotency_key).await
 }
 
 async fn wait_for_completion(
@@ -159,7 +165,6 @@ async fn wait_for_completion(
 
 #[derive(Debug)]
 pub enum ApiError {
-    MissingIdempotencyKey,
     MissingApiKey,
     InternalError(String),
     BatchFailed(String),
@@ -168,10 +173,6 @@ pub enum ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let (status, message) = match self {
-            ApiError::MissingIdempotencyKey => (
-                StatusCode::BAD_REQUEST,
-                "Idempotency-Key header is required".to_string(),
-            ),
             ApiError::MissingApiKey => (
                 StatusCode::UNAUTHORIZED,
                 "Authorization header with Bearer token is required".to_string(),
