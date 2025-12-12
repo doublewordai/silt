@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  silt:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - BATCH_WINDOW_SECS=${BATCH_WINDOW_SECS:-60}
+      - BATCH_POLL_INTERVAL_SECS=${BATCH_POLL_INTERVAL_SECS:-60}
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8080
+      - TCP_KEEPALIVE_SECS=${TCP_KEEPALIVE_SECS:-60}
+    depends_on:
+      - redis
+
+volumes:
+  redis_data:
