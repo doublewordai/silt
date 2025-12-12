@@ -100,7 +100,7 @@ client = OpenAI(
 )
 
 # Generate unique ID for this request
-request_id = str(uuid.uuid4())
+request_id = "this-is-my-unique-id"
 
 # Make request with idempotency key
 response = client.chat.completions.create(
@@ -114,9 +114,14 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
+If the long running connection drops, simply repeat the same request with the
+same request id to resume.
+
 ### With Automatic Retries
 
-For production use, implement retry logic to handle connection drops:
+For production use, implement retry logic to handle connection drops. The
+idempotency key means we'll resume the same request safely, without being
+double charged, or waiting twice as long.
 
 ```python
 import time
