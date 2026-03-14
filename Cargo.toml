@@ -49,4 +49,4 @@ uuid = { version = "1.11", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 
 # Socket configuration
-socket2 = "0.5"
+socket2 = "0.6"
